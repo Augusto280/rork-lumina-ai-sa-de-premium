@@ -1,4 +1,4 @@
-const GITHUB_JSON_URL = "https://augusto280.github.io/rork-lumina-ai-sa-de-premium/assinaturas.json";
+const GITHUB_JSON_URL = "https://raw.githubusercontent.com/Augusto280/rork-lumina-ai-sa-de-premium/main/assinaturas.json";
 
 export interface AssinaturaData {
   status: string;
@@ -29,28 +29,48 @@ export async function verificarAssinatura(email: string): Promise<VerificacaoRes
     console.log(`[PremiumService] URL completa: ${urlComCache}`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
       const response = await fetch(urlComCache, {
         method: "GET",
         headers: {
           "Accept": "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
         },
         signal: controller.signal,
+        cache: "no-store",
       });
       clearTimeout(timeoutId);
+      
+      console.log(`[PremiumService] Status da resposta: ${response.status}`);
+      console.log(`[PremiumService] Content-Type: ${response.headers.get('content-type')}`);
+      
+      const responseText = await response.text();
+      console.log(`[PremiumService] Resposta bruta (primeiros 200 chars): ${responseText.substring(0, 200)}...`);
 
     if (!response.ok) {
       console.error(`[PremiumService] Erro HTTP: ${response.status}`);
+      console.error(`[PremiumService] Resposta bruta: ${responseText}`);
       return {
         isPremium: false,
-        erro: "Erro ao validar assinatura. Tente novamente em alguns minutos.",
+        erro: `Erro ao validar assinatura (HTTP ${response.status}). Tente novamente em alguns minutos.`,
       };
     }
 
-    const data: AssinaturasResponse = await response.json();
-    console.log("[PremiumService] Dados recebidos:", JSON.stringify(data, null, 2));
+    let data: AssinaturasResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log("[PremiumService] Dados recebidos:", JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.error("[PremiumService] Erro ao fazer parse do JSON:", parseError);
+      console.error("[PremiumService] Resposta bruta completa:", responseText);
+      return {
+        isPremium: false,
+        erro: "Erro ao processar dados de assinatura. Tente novamente.",
+      };
+    }
 
     if (!data.assinaturas) {
       console.error("[PremiumService] Formato de JSON inválido");

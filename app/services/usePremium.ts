@@ -32,13 +32,15 @@ export function usePremium() {
         return { isPremium: false };
       }
       console.log("[usePremium] Verificando assinatura para:", email);
-      return await verificarAssinatura(email);
+      const result = await verificarAssinatura(email);
+      console.log("[usePremium] Resultado da verificação:", result);
+      return result;
     },
     enabled: !loadingEmail && !!email,
     staleTime: 60000,
     refetchInterval: false,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 
   const premium = data?.isPremium === true;

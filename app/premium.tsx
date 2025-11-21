@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { usePremium, saveUserEmail } from "./services/usePremium";
 import { verificarAssinatura } from "./services/premiumService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Sparkles, Mail, CheckCircle, AlertCircle } from "lucide-react-native";
+import { Sparkles, Mail, CheckCircle, AlertCircle, Wifi } from "lucide-react-native";
 
 export default function PremiumScreen() {
   const router = useRouter();
@@ -23,6 +23,7 @@ export default function PremiumScreen() {
   const { email: savedEmail, refetch } = usePremium();
   const [email, setEmail] = useState<string>(savedEmail || "");
   const [loading, setLoading] = useState<boolean>(false);
+  const [testingConnection, setTestingConnection] = useState<boolean>(false);
 
   const handleAlreadyPaid = async () => {
     if (!email.trim()) {
@@ -98,6 +99,37 @@ export default function PremiumScreen() {
     }
   };
 
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    console.log("[PremiumScreen] Testando conexão...");
+
+    try {
+      const url = "https://raw.githubusercontent.com/Augusto280/rork-lumina-ai-sa-de-premium/main/assinaturas.json";
+      const response = await fetch(url + "?t=" + Date.now(), {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+      });
+      
+      console.log("[PremiumScreen] Status:", response.status);
+      const text = await response.text();
+      console.log("[PremiumScreen] Resposta:", text.substring(0, 200));
+      
+      if (response.ok) {
+        Alert.alert(
+          "✅ Conexão OK!",
+          `Status: ${response.status}\nDados obtidos com sucesso!\n\nPrimeiros caracteres:\n${text.substring(0, 100)}...`
+        );
+      } else {
+        Alert.alert("⚠️ Erro de Conexão", `Status HTTP: ${response.status}\n\nResposta: ${text}`);
+      }
+    } catch (e) {
+      console.error("[PremiumScreen] Erro no teste:", e);
+      Alert.alert("❌ Erro", `Falha na conexão: ${e}`);
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView
@@ -166,6 +198,21 @@ export default function PremiumScreen() {
                 </>
               )}
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.testButton, testingConnection && styles.buttonDisabled]}
+              onPress={handleTestConnection}
+              disabled={testingConnection}
+            >
+              {testingConnection ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Wifi size={20} color="#fff" />
+                  <Text style={styles.buttonText}>Testar Conexão</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
 
           <View style={styles.infoCard}>
@@ -174,7 +221,8 @@ export default function PremiumScreen() {
               1. Insira o e-mail usado na sua assinatura{"\n"}
               2. Clique em &quot;Já Assinei&quot;{"\n"}
               3. Aguarde a verificação{"\n"}
-              4. Aproveite o Premium!
+              4. Aproveite o Premium!{"\n\n"}
+              💡 Use &quot;Testar Conexão&quot; se tiver problemas
             </Text>
           </View>
 
@@ -265,6 +313,9 @@ const styles = StyleSheet.create({
   },
   devButton: {
     backgroundColor: "#ff6b6b",
+  },
+  testButton: {
+    backgroundColor: "#2ecc71",
   },
   buttonDisabled: {
     opacity: 0.5,
