@@ -24,13 +24,22 @@ export async function verificarAssinatura(email: string): Promise<VerificacaoRes
     console.log(`[PremiumService] Verificando assinatura para: ${email}`);
     console.log(`[PremiumService] Buscando de: ${GITHUB_JSON_URL}`);
 
-    const response = await fetch(GITHUB_JSON_URL, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "Cache-Control": "no-cache",
-      },
-    });
+    const timestamp = Date.now();
+    const urlComCache = `${GITHUB_JSON_URL}?t=${timestamp}`;
+    console.log(`[PremiumService] URL completa: ${urlComCache}`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const response = await fetch(urlComCache, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error(`[PremiumService] Erro HTTP: ${response.status}`);
@@ -97,11 +106,41 @@ export async function verificarAssinatura(email: string): Promise<VerificacaoRes
       mensagem: "Premium ativado com sucesso!",
     };
 
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error("[PremiumService] Erro no fetch:", fetchError);
+      
+      if (fetchError instanceof Error) {
+        if (fetchError.name === 'AbortError') {
+          console.error("[PremiumService] Timeout na requisição");
+          return {
+            isPremium: false,
+            erro: "Timeout ao conectar. Verifique sua conexão com a internet.",
+          };
+        }
+        console.error("[PremiumService] Detalhes do erro:", fetchError.message);
+      }
+      
+      throw fetchError;
+    }
+
   } catch (error) {
     console.error("[PremiumService] Erro ao verificar assinatura:", error);
+    
+    let mensagemErro = "Erro ao validar assinatura. Verifique sua conexão com a internet e tente novamente.";
+    
+    if (error instanceof Error) {
+      console.error("[PremiumService] Tipo de erro:", error.name);
+      console.error("[PremiumService] Mensagem de erro:", error.message);
+      
+      if (error.message.includes("Network") || error.message.includes("Failed to fetch")) {
+        mensagemErro = "Erro de conexão. Verifique se você está conectado à internet.";
+      }
+    }
+    
     return {
       isPremium: false,
-      erro: "Erro ao validar assinatura. Tente novamente em alguns minutos.",
+      erro: mensagemErro,
     };
   }
 }

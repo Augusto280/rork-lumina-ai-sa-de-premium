@@ -34,9 +34,11 @@ export function usePremium() {
       console.log("[usePremium] Verificando assinatura para:", email);
       return await verificarAssinatura(email);
     },
-    enabled: !loadingEmail,
-    staleTime: 30000,
-    refetchInterval: 60000,
+    enabled: !loadingEmail && !!email,
+    staleTime: 60000,
+    refetchInterval: false,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const premium = data?.isPremium === true;
