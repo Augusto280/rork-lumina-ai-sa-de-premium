@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { usePremium } from "./services/usePremium";
@@ -8,16 +8,20 @@ export default function IndexScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { premium, loading } = usePremium();
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
-      if (premium) {
-        router.replace("/home");
-      } else {
-        router.replace("/premium");
-      }
+    if (!loading && !hasNavigated) {
+      setHasNavigated(true);
+      setTimeout(() => {
+        if (premium) {
+          router.replace("/home");
+        } else {
+          router.replace("/premium");
+        }
+      }, 100);
     }
-  }, [loading, premium]);
+  }, [loading, premium, hasNavigated, router]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>

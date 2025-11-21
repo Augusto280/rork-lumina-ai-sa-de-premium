@@ -28,11 +28,13 @@ export function usePremium() {
     queryKey: ["premium", email],
     queryFn: async () => {
       if (!email) {
+        console.log("[usePremium] Sem e-mail, retornando isPremium=false");
         return { isPremium: false };
       }
+      console.log("[usePremium] Verificando assinatura para:", email);
       return await verificarAssinatura(email);
     },
-    enabled: !!email && !loadingEmail,
+    enabled: !loadingEmail,
     staleTime: 30000,
     refetchInterval: 60000,
   });
