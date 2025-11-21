@@ -1,9 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-
 import { useRouter } from "expo-router";
 import { usePremium, clearUserEmail } from "./services/usePremium";
 import { Sparkles, Crown, LogOut, RefreshCw } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -20,11 +18,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["#000", "#1a0033", "#000"]}
-        style={styles.gradient}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <View style={styles.crownContainer}>
               <Crown size={64} color="#FFD700" fill="#FFD700" />
@@ -84,8 +78,7 @@ export default function HomeScreen() {
               <Text style={styles.logoutText}>Sair</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </LinearGradient>
+      </ScrollView>
     </View>
   );
 }
@@ -93,10 +86,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: "#0a0015",
   },
   scrollContent: {
     flexGrow: 1,
